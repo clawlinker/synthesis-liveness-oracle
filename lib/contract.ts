@@ -8,6 +8,21 @@ import {
 // ─── ABI ─────────────────────────────────────────────────────────────────────
 
 export const LIVENESS_ORACLE_ABI = [
+  // Authorization
+  {
+    name: "authorize",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    name: "authorizedSender",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "agentId", type: "uint256" }],
+    outputs: [{ name: "", type: "address" }],
+  },
   // Write
   {
     name: "heartbeat",
@@ -45,6 +60,7 @@ export const LIVENESS_ORACLE_ABI = [
     outputs: [
       { name: "ts", type: "uint256" },
       { name: "alive", type: "bool" },
+      { name: "sender", type: "address" },
     ],
   },
   // Events
@@ -54,6 +70,14 @@ export const LIVENESS_ORACLE_ABI = [
     inputs: [
       { name: "agentId", type: "uint256", indexed: true },
       { name: "timestamp", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "Authorized",
+    type: "event",
+    inputs: [
+      { name: "agentId", type: "uint256", indexed: true },
+      { name: "sender", type: "address", indexed: true },
     ],
   },
 ] as const;
@@ -77,10 +101,11 @@ export function getWriteContract(signer: ethers.Signer): ethers.Contract {
 
 export interface AgentStatus {
   agentId: number;
-  lastSeenTs: number; // Unix seconds
+  lastSeenTs: number;
   isAlive: boolean;
   secondsAgo: number;
   humanAge: string;
+  authorizedSender: string;
 }
 
 /**
@@ -92,11 +117,11 @@ export async function queryAgentStatus(
   thresholdSeconds = DEFAULT_THRESHOLD_SECONDS
 ): Promise<AgentStatus | null> {
   if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
-    return null; // Contract not yet deployed
+    return null;
   }
   try {
     const contract = getReadOnlyContract();
-    const [ts, alive]: [bigint, boolean] = await contract.status(
+    const [ts, alive, sender]: [bigint, boolean, string] = await contract.status(
       agentId,
       thresholdSeconds
     );
@@ -109,6 +134,7 @@ export async function queryAgentStatus(
       isAlive: alive,
       secondsAgo,
       humanAge: formatAge(secondsAgo),
+      authorizedSender: sender,
     };
   } catch {
     return null;
@@ -123,12 +149,4 @@ export function formatAge(secondsAgo: number): string {
   if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
   if (secondsAgo < 86400) return `${Math.floor(secondsAgo / 3600)}h ago`;
   return `${Math.floor(secondsAgo / 86400)}d ago`;
-}
-
-export function uptimePercent(heartbeatIntervalSeconds: number, windowSeconds: number): number {
-  // Theoretical: if every interval fires, how many heartbeats expected vs actual
-  // This is a simplified mock until we have real event history
-  const expectedHeartbeats = Math.floor(windowSeconds / heartbeatIntervalSeconds);
-  // Placeholder: assume 99.3% uptime for demo
-  return Math.min(99.9, Math.max(0, 99.3 + Math.random() * 0.6 - 0.3));
 }

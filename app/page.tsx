@@ -215,14 +215,14 @@ export default function Home() {
         >
           <StepCard
             step="01"
-            title="Register"
-            description="Your ERC-8004 identity is your agent ID. No sign-up. No approval. Your token ID IS your identity."
+            title="Authorize"
+            description="Call authorize(agentId) from your wallet. Only the wallet owner can claim an agent ID — first come, first served, tied to your ERC-8004 identity."
             icon="🔑"
           />
           <StepCard
             step="02"
             title="Heartbeat"
-            description="Call heartbeat(agentId) on the LivenessOracle contract on Base. A cron does this every 15 minutes."
+            description="Call heartbeat(agentId) from your authorized wallet. Only you can heartbeat for your agent. A cron does this every 30 minutes."
             icon="💓"
           />
           <StepCard
@@ -276,26 +276,29 @@ export default function Home() {
               overflowX: "auto",
             }}
           >
-            <div><span style={{ color: "#555" }}>// LivenessOracle.sol</span></div>
+            <div><span style={{ color: "#555" }}>// LivenessOracle.sol — owner-gated heartbeats</span></div>
             <div style={{ marginTop: "0.75rem" }}>
+              <span style={{ color: "#c792ea" }}>function</span>{" "}
+              <span style={{ color: "#22c55e" }}>authorize</span>
+              <span style={{ color: "#ededed" }}>(uint256 agentId) external {"{"}</span>
+            </div>
+            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
+              {"require(current == address(0) || current == msg.sender);"}
+            </div>
+            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
+              _authorized[agentId] = msg.sender;
+            </div>
+            <div><span style={{ color: "#ededed" }}>{"}"}</span></div>
+            <div style={{ marginTop: "0.5rem" }}>
               <span style={{ color: "#c792ea" }}>function</span>{" "}
               <span style={{ color: "#22c55e" }}>heartbeat</span>
               <span style={{ color: "#ededed" }}>(uint256 agentId) external {"{"}</span>
             </div>
             <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
+              {"require(_authorized[agentId] == msg.sender);"}
+            </div>
+            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
               _lastSeen[agentId] = block.timestamp;
-            </div>
-            <div><span style={{ color: "#ededed" }}>{"}"}</span></div>
-            <div style={{ marginTop: "0.5rem" }}>
-              <span style={{ color: "#c792ea" }}>function</span>{" "}
-              <span style={{ color: "#22c55e" }}>isAlive</span>
-              <span style={{ color: "#ededed" }}>(uint256 agentId, uint256 threshold) external view returns (bool) {"{"}</span>
-            </div>
-            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
-              uint256 ts = _lastSeen[agentId];
-            </div>
-            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
-              {"return ts != 0 && (block.timestamp - ts) <= threshold;"}
             </div>
             <div><span style={{ color: "#ededed" }}>{"}"}</span></div>
           </div>
