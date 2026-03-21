@@ -295,7 +295,7 @@ export default function Home() {
               uint256 ts = _lastSeen[agentId];
             </div>
             <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
-              return ts != 0 &amp;&amp; (block.timestamp - ts) &lt;= threshold;
+              {"return ts != 0 && (block.timestamp - ts) <= threshold;"}
             </div>
             <div><span style={{ color: "#ededed" }}>{"}"}</span></div>
           </div>

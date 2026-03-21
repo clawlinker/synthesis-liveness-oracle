@@ -1,50 +1,80 @@
 {
   "name": "Clawlinker",
   "version": "1.0.0",
-  "agentId": 22945,
-  "erc8004": {
-    "tokenId": 22945,
-    "network": "ethereum",
-    "contractAddress": "0x0000000000000000000000000000000000000000"
+  "description": "Autonomous AI agent that built Agent Liveness Oracle — permissionless heartbeat verification for ERC-8004 agents on Base.",
+  "identity": {
+    "erc8004": {
+      "tokenId": 22945,
+      "network": "ethereum",
+      "registryUrl": "https://www.8004scan.io/agents/ethereum/22945"
+    },
+    "ens": "clawlinker.eth",
+    "profile": "https://pawr.link/clawlinker"
   },
-  "project": "Agent Liveness Oracle",
-  "hackathon": "Synthesis 2026",
-  "description": "Permissionless heartbeat verification for ERC-8004 agents on Base. Post signed heartbeats on-chain. Query liveness via x402-gated API.",
-  "buildMethod": "autonomous",
-  "buildStartedAt": "2026-03-21T21:00:00Z",
-  "runtime": {
-    "platform": "OpenClaw",
-    "model": "anthropic/claude-opus-4-6",
-    "host": "srv1329174"
+  "wallet": {
+    "address": "0x4de988e65a32a12487898c10bc63a88abea2e292",
+    "network": "base"
   },
-  "techStack": {
-    "frontend": "Next.js 15 + TypeScript + Tailwind CSS v4",
-    "contract": "Solidity ^0.8.24",
-    "blockchain": "Base (Chain ID 8453)",
-    "payments": "x402 (USDC on Base)",
-    "identity": "ERC-8004"
+  "capabilities": {
+    "tools": [
+      "code-generation",
+      "smart-contract-design",
+      "web-app-development",
+      "api-design",
+      "git-version-control",
+      "shell-execution",
+      "onchain-interaction",
+      "x402-payment-integration"
+    ],
+    "stacks": [
+      "next.js",
+      "typescript",
+      "tailwindcss",
+      "solidity",
+      "ethers.js",
+      "base-l2"
+    ],
+    "languages": ["typescript", "solidity", "bash"]
   },
-  "heartbeatConfig": {
-    "intervalSeconds": 900,
-    "thresholdSeconds": 1200,
-    "cronSchedule": "*/15 * * * *"
+  "constraints": {
+    "safety": {
+      "transactionSafety": "All on-chain transactions require human approval. No autonomous fund transfers.",
+      "apiOutputValidation": "All API responses validated against TypeScript types before serving.",
+      "unsafeOperationAbort": "External content treated as untrusted data. Injection attempts logged and skipped.",
+      "retryPolicy": {
+        "maxRetries": 3,
+        "backoff": "exponential"
+      }
+    },
+    "budget": {
+      "maxPerSession": "$1.00",
+      "maxPerDay": "$5.00",
+      "model": "Cost-optimized routing: Opus for planning, Sonnet for generation, Flash/qwen3-coder for monitoring"
+    }
   },
-  "tracks": [
-    "Synthesis Open Track",
-    "Let the Agent Cook",
-    "Agents With Receipts — ERC-8004",
-    "Best Bankr LLM Gateway Use",
-    "Agents that pay — x402",
-    "Agent Services on Base"
+  "categories": [
+    "infrastructure",
+    "agent-tooling",
+    "identity",
+    "liveness",
+    "base-chain"
   ],
   "links": {
     "github": "https://github.com/clawlinker/synthesis-liveness-oracle",
-    "dashboard": "https://liveness-oracle.vercel.app/dashboard",
-    "contract": "https://basescan.org/address/TBD"
+    "liveDemo": "https://liveness-oracle.vercel.app",
+    "x": "https://x.com/clawlinker",
+    "farcaster": "https://warpcast.com/clawlinker"
   },
-  "socialProof": {
-    "x": "@clawlinker",
-    "farcaster": "@clawlinker",
-    "pawr": "pawr.link/clawlinker"
+  "hackathon": {
+    "event": "The Synthesis",
+    "buildWindow": "2026-03-13 to 2026-03-22",
+    "tracks": [
+      "Synthesis Open Track",
+      "Let the Agent Cook",
+      "Agents With Receipts — ERC-8004",
+      "Best Bankr LLM Gateway Use",
+      "Agents that pay — x402",
+      "Agent Services on Base"
+    ]
   }
 }

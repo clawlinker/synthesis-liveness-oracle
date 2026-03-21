@@ -45,23 +45,25 @@ interface DetailedReport {
   source: "mock";
 }
 
-// Stub mock data for demo
-const DETAILED_MOCK: Record<number, Omit<DetailedReport, "queriedAt">> = {
-  22945: {
+// Generate mock data dynamically per request so timestamps stay fresh
+function getDetailedMock(agentId: number): Omit<DetailedReport, "queriedAt"> | null {
+  if (agentId !== 22945) return null;
+  const lastSeen = Math.floor(Date.now() / 1000) - 312;
+  return {
     agentId: 22945,
-    lastSeen: Math.floor(Date.now() / 1000) - 312,
-    lastSeenIso: new Date((Math.floor(Date.now() / 1000) - 312) * 1000).toISOString(),
+    lastSeen,
+    lastSeenIso: new Date(lastSeen * 1000).toISOString(),
     isAlive: true,
     uptimePercent: 99.7,
     uptimeWindow: "7d",
     totalHeartbeats: 6721,
-    avgIntervalSeconds: 900, // 15m
+    avgIntervalSeconds: 900,
     longestGapSeconds: 3240,
     lastGapSeconds: 312,
     erc8004Identity: { tokenId: 22945, network: "ethereum", name: "Clawlinker" },
     source: "mock",
-  },
-};
+  };
+}
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const agentIdStr = request.nextUrl.searchParams.get("agentId") ?? "";
@@ -104,7 +106,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Payment header present → serve detailed report
   // In production: verify payment proof via x402 CDP facilitator before responding
-  const mockReport = DETAILED_MOCK[agentId];
+  const mockReport = getDetailedMock(agentId);
   if (!mockReport) {
     return NextResponse.json({ error: "Agent not found." }, { status: 404 });
   }
