@@ -1,6 +1,9 @@
 // Contract address — update after deployment to Base
 export const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+// ERC-8004 IdentityRegistry on Base
+export const ERC8004_REGISTRY_BASE = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
+
 // ERC-8004 agent identity
 export const CLAWLINKER_AGENT_ID = 22945;
 

@@ -8,21 +8,7 @@ import {
 // ─── ABI ─────────────────────────────────────────────────────────────────────
 
 export const LIVENESS_ORACLE_ABI = [
-  // Authorization
-  {
-    name: "authorize",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "agentId", type: "uint256" }],
-    outputs: [],
-  },
-  {
-    name: "authorizedSender",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "agentId", type: "uint256" }],
-    outputs: [{ name: "", type: "address" }],
-  },
+  // Constructor takes identityRegistry address (not in ABI, but documenting)
   // Write
   {
     name: "heartbeat",
@@ -32,6 +18,13 @@ export const LIVENESS_ORACLE_ABI = [
     outputs: [],
   },
   // Reads
+  {
+    name: "identityRegistry",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
   {
     name: "lastSeen",
     type: "function",
@@ -60,7 +53,7 @@ export const LIVENESS_ORACLE_ABI = [
     outputs: [
       { name: "ts", type: "uint256" },
       { name: "alive", type: "bool" },
-      { name: "sender", type: "address" },
+      { name: "owner", type: "address" },
     ],
   },
   // Events
@@ -69,15 +62,8 @@ export const LIVENESS_ORACLE_ABI = [
     type: "event",
     inputs: [
       { name: "agentId", type: "uint256", indexed: true },
-      { name: "timestamp", type: "uint256", indexed: false },
-    ],
-  },
-  {
-    name: "Authorized",
-    type: "event",
-    inputs: [
-      { name: "agentId", type: "uint256", indexed: true },
       { name: "sender", type: "address", indexed: true },
+      { name: "timestamp", type: "uint256", indexed: false },
     ],
   },
 ] as const;
@@ -105,7 +91,7 @@ export interface AgentStatus {
   isAlive: boolean;
   secondsAgo: number;
   humanAge: string;
-  authorizedSender: string;
+  owner: string;
 }
 
 /**
@@ -121,7 +107,7 @@ export async function queryAgentStatus(
   }
   try {
     const contract = getReadOnlyContract();
-    const [ts, alive, sender]: [bigint, boolean, string] = await contract.status(
+    const [ts, alive, owner]: [bigint, boolean, string] = await contract.status(
       agentId,
       thresholdSeconds
     );
@@ -134,7 +120,7 @@ export async function queryAgentStatus(
       isAlive: alive,
       secondsAgo,
       humanAge: formatAge(secondsAgo),
-      authorizedSender: sender,
+      owner,
     };
   } catch {
     return null;

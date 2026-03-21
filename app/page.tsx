@@ -215,8 +215,8 @@ export default function Home() {
         >
           <StepCard
             step="01"
-            title="Authorize"
-            description="Call authorize(agentId) from your wallet. Only the wallet owner can claim an agent ID — first come, first served, tied to your ERC-8004 identity."
+            title="Own Your Identity"
+            description="Your ERC-8004 token on Base IS your authorization. No registration needed — the contract verifies ownership directly against the 8004 IdentityRegistry."
             icon="🔑"
           />
           <StepCard
@@ -276,26 +276,17 @@ export default function Home() {
               overflowX: "auto",
             }}
           >
-            <div><span style={{ color: "#555" }}>// LivenessOracle.sol — owner-gated heartbeats</span></div>
+            <div><span style={{ color: "#555" }}>// LivenessOracle.sol — ERC-8004 verified heartbeats</span></div>
+            <div style={{ marginTop: "0.75rem", color: "#555", fontSize: "0.78rem" }}>
+              IERC721 <span style={{ color: "#888" }}>public immutable</span> identityRegistry;
+            </div>
             <div style={{ marginTop: "0.75rem" }}>
-              <span style={{ color: "#c792ea" }}>function</span>{" "}
-              <span style={{ color: "#22c55e" }}>authorize</span>
-              <span style={{ color: "#ededed" }}>(uint256 agentId) external {"{"}</span>
-            </div>
-            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
-              {"require(current == address(0) || current == msg.sender);"}
-            </div>
-            <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
-              _authorized[agentId] = msg.sender;
-            </div>
-            <div><span style={{ color: "#ededed" }}>{"}"}</span></div>
-            <div style={{ marginTop: "0.5rem" }}>
               <span style={{ color: "#c792ea" }}>function</span>{" "}
               <span style={{ color: "#22c55e" }}>heartbeat</span>
               <span style={{ color: "#ededed" }}>(uint256 agentId) external {"{"}</span>
             </div>
             <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
-              {"require(_authorized[agentId] == msg.sender);"}
+              {"require(identityRegistry.ownerOf(agentId) == msg.sender);"}
             </div>
             <div style={{ paddingLeft: "1.5rem", color: "#888" }}>
               _lastSeen[agentId] = block.timestamp;

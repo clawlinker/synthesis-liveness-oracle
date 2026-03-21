@@ -9,10 +9,16 @@ interface IERC721 {
 /// @title LivenessOracle
 /// @notice Heartbeat registry for ERC-8004 agents on Base.
 ///         Only the owner of an ERC-8004 token can post heartbeats for that agent.
-///         Anyone can query liveness for free.
-/// @dev No admin. Ownership verified via ERC-8004 registry on Ethereum (cross-chain)
-///      or via a local registry mapping set by the agent owner.
+///         Ownership is verified directly against the ERC-8004 IdentityRegistry on Base.
+/// @dev No admin. No proxy. Ownership verified on every heartbeat call.
 contract LivenessOracle {
+    // -------------------------------------------------------------------------
+    // Immutables
+    // -------------------------------------------------------------------------
+
+    /// @notice The ERC-8004 IdentityRegistry contract on Base
+    IERC721 public immutable identityRegistry;
+
     // -------------------------------------------------------------------------
     // State
     // -------------------------------------------------------------------------
@@ -20,43 +26,21 @@ contract LivenessOracle {
     /// @notice Mapping from agentId to the block.timestamp of its last heartbeat
     mapping(uint256 => uint256) private _lastSeen;
 
-    /// @notice Mapping from agentId to the authorized heartbeat sender.
-    ///         The agent's ERC-8004 owner registers their Base address here,
-    ///         proving they control the identity.
-    mapping(uint256 => address) private _authorized;
-
     // -------------------------------------------------------------------------
     // Events
     // -------------------------------------------------------------------------
 
     /// @notice Emitted whenever an agent posts a heartbeat
-    event Heartbeat(uint256 indexed agentId, uint256 timestamp);
-
-    /// @notice Emitted when an agent owner registers their heartbeat address
-    event Authorized(uint256 indexed agentId, address indexed sender);
+    event Heartbeat(uint256 indexed agentId, address indexed sender, uint256 timestamp);
 
     // -------------------------------------------------------------------------
-    // Authorization
+    // Constructor
     // -------------------------------------------------------------------------
 
-    /// @notice Register yourself as the authorized heartbeat sender for `agentId`.
-    ///         Only the current authorized address (or first-time registrant) can call.
-    ///         The agent owner should call this once from their wallet to claim their agentId.
-    /// @param agentId  Numeric ERC-8004 agent identifier
-    function authorize(uint256 agentId) external {
-        address current = _authorized[agentId];
-        require(
-            current == address(0) || current == msg.sender,
-            "LivenessOracle: not authorized"
-        );
-        _authorized[agentId] = msg.sender;
-        emit Authorized(agentId, msg.sender);
-    }
-
-    /// @notice Return the authorized heartbeat sender for an agent.
-    /// @param agentId  Numeric ERC-8004 agent identifier
-    function authorizedSender(uint256 agentId) external view returns (address) {
-        return _authorized[agentId];
+    /// @param _identityRegistry Address of the ERC-8004 IdentityRegistry on Base
+    constructor(address _identityRegistry) {
+        require(_identityRegistry != address(0), "LivenessOracle: zero registry");
+        identityRegistry = IERC721(_identityRegistry);
     }
 
     // -------------------------------------------------------------------------
@@ -64,15 +48,15 @@ contract LivenessOracle {
     // -------------------------------------------------------------------------
 
     /// @notice Record a heartbeat for `agentId` at the current block timestamp.
-    ///         Only the authorized sender for this agentId can call.
+    ///         Only the current owner of the ERC-8004 token can call this.
     /// @param agentId  Numeric ERC-8004 agent identifier (e.g. 22945 for Clawlinker)
     function heartbeat(uint256 agentId) external {
         require(
-            _authorized[agentId] == msg.sender,
-            "LivenessOracle: not authorized"
+            identityRegistry.ownerOf(agentId) == msg.sender,
+            "LivenessOracle: caller is not agent owner"
         );
         _lastSeen[agentId] = block.timestamp;
-        emit Heartbeat(agentId, block.timestamp);
+        emit Heartbeat(agentId, msg.sender, block.timestamp);
     }
 
     // -------------------------------------------------------------------------
@@ -99,15 +83,16 @@ contract LivenessOracle {
         return (block.timestamp - ts) <= thresholdSeconds;
     }
 
-    /// @notice Convenience helper: return lastSeen, isAlive, and authorized sender.
+    /// @notice Convenience: return lastSeen, isAlive, and current token owner.
     /// @param agentId          Numeric ERC-8004 agent identifier
     /// @param thresholdSeconds Maximum acceptable age of the last heartbeat (seconds)
     function status(
         uint256 agentId,
         uint256 thresholdSeconds
-    ) external view returns (uint256 ts, bool alive, address sender) {
+    ) external view returns (uint256 ts, bool alive, address owner) {
         ts = _lastSeen[agentId];
         alive = ts != 0 && (block.timestamp - ts) <= thresholdSeconds;
-        sender = _authorized[agentId];
+        // ownerOf may revert if token doesn't exist — that's fine, it bubbles up
+        owner = identityRegistry.ownerOf(agentId);
     }
 }
