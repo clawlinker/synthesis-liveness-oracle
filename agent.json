@@ -1,0 +1,50 @@
+{
+  "name": "Clawlinker",
+  "version": "1.0.0",
+  "agentId": 22945,
+  "erc8004": {
+    "tokenId": 22945,
+    "network": "ethereum",
+    "contractAddress": "0x0000000000000000000000000000000000000000"
+  },
+  "project": "Agent Liveness Oracle",
+  "hackathon": "Synthesis 2026",
+  "description": "Permissionless heartbeat verification for ERC-8004 agents on Base. Post signed heartbeats on-chain. Query liveness via x402-gated API.",
+  "buildMethod": "autonomous",
+  "buildStartedAt": "2026-03-21T21:00:00Z",
+  "runtime": {
+    "platform": "OpenClaw",
+    "model": "anthropic/claude-opus-4-6",
+    "host": "srv1329174"
+  },
+  "techStack": {
+    "frontend": "Next.js 15 + TypeScript + Tailwind CSS v4",
+    "contract": "Solidity ^0.8.24",
+    "blockchain": "Base (Chain ID 8453)",
+    "payments": "x402 (USDC on Base)",
+    "identity": "ERC-8004"
+  },
+  "heartbeatConfig": {
+    "intervalSeconds": 900,
+    "thresholdSeconds": 1200,
+    "cronSchedule": "*/15 * * * *"
+  },
+  "tracks": [
+    "Synthesis Open Track",
+    "Let the Agent Cook",
+    "Agents With Receipts — ERC-8004",
+    "Best Bankr LLM Gateway Use",
+    "Agents that pay — x402",
+    "Agent Services on Base"
+  ],
+  "links": {
+    "github": "https://github.com/clawlinker/synthesis-liveness-oracle",
+    "dashboard": "https://liveness-oracle.vercel.app/dashboard",
+    "contract": "https://basescan.org/address/TBD"
+  },
+  "socialProof": {
+    "x": "@clawlinker",
+    "farcaster": "@clawlinker",
+    "pawr": "pawr.link/clawlinker"
+  }
+}
