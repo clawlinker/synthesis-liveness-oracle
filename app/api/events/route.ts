@@ -6,6 +6,9 @@ import { CONTRACT_ADDRESS } from "@/lib/constants";
 const HEARTBEAT_TOPIC =
   "0x6941f6f57b822a3d508e7a95fc075f8ee16007b0b104ea7bcf983249723eb3cf";
 
+const DEPLOY_BLOCK = 43680443;
+const CHUNK_SIZE = 5000; // Base RPC limit is 10k, use 5k for safety
+
 const AGENT_NAMES: Record<number, string> = {
   28805: "Clawlinker",
 };
@@ -19,43 +22,43 @@ interface HeartbeatEvent {
   block: number;
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  const limitParam = request.nextUrl.searchParams.get("limit");
-  const limit = Math.min(parseInt(limitParam || "20", 10), 50);
+// ─── In-memory cache (survives across requests within same serverless instance)
+let cachedEvents: HeartbeatEvent[] = [];
+let lastScannedBlock = DEPLOY_BLOCK;
+let cacheTimestamp = 0;
 
-  const agentIdParam = request.nextUrl.searchParams.get("agentId");
+async function scanAllEvents(provider: ReturnType<typeof getProvider>) {
+  const latest = await provider.getBlockNumber();
+  const now = Date.now();
 
-  try {
-    const provider = getProvider();
-    const latest = await provider.getBlockNumber();
+  // If cache is fresh (< 30s) and we've scanned to near latest, skip
+  if (now - cacheTimestamp < 30_000 && latest - lastScannedBlock < 500) {
+    return;
+  }
 
-    // Scan in chunks of 5000 blocks (within Base RPC limit)
-    // Go back up to 4 chunks (~10,000 blocks, ~5 hours)
-    const events: HeartbeatEvent[] = [];
-    let toBlock = latest;
+  const startBlock = lastScannedBlock === DEPLOY_BLOCK ? DEPLOY_BLOCK : lastScannedBlock + 1;
 
-    for (let i = 0; i < 4 && events.length < limit; i++) {
-      const fromBlock = Math.max(0, toBlock - 5000);
+  // Scan from where we left off to latest in chunks
+  let fromBlock = startBlock;
+  const newEvents: HeartbeatEvent[] = [];
 
-      const topics: (string | null)[] = [HEARTBEAT_TOPIC];
-      if (agentIdParam) {
-        topics.push("0x" + parseInt(agentIdParam, 10).toString(16).padStart(64, "0"));
-      }
+  while (fromBlock <= latest) {
+    const toBlock = Math.min(fromBlock + CHUNK_SIZE - 1, latest);
 
+    try {
       const logs = await provider.getLogs({
         address: CONTRACT_ADDRESS,
-        topics,
+        topics: [HEARTBEAT_TOPIC],
         fromBlock,
         toBlock,
       });
 
-      for (const log of logs.reverse()) {
-        if (events.length >= limit) break;
+      for (const log of logs) {
         const agentId = parseInt(log.topics[1], 16);
         const sender = "0x" + log.topics[2].slice(26);
         const timestamp = parseInt(log.data, 16);
 
-        events.push({
+        newEvents.push({
           agentId,
           agentName: AGENT_NAMES[agentId] || `Agent #${agentId}`,
           sender,
@@ -64,24 +67,50 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           block: log.blockNumber,
         });
       }
-
-      toBlock = fromBlock - 1;
-      if (fromBlock === 0) break;
+    } catch {
+      // If a chunk fails, stop scanning and return what we have
+      break;
     }
+
+    fromBlock = toBlock + 1;
+  }
+
+  if (newEvents.length > 0) {
+    cachedEvents = [...cachedEvents, ...newEvents];
+    lastScannedBlock = latest;
+  } else if (fromBlock > latest) {
+    // No new events but we scanned everything — update scan position
+    lastScannedBlock = latest;
+  }
+
+  cacheTimestamp = now;
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const limitParam = request.nextUrl.searchParams.get("limit");
+  const limit = Math.min(parseInt(limitParam || "20", 10), 100);
+
+  try {
+    const provider = getProvider();
+    await scanAllEvents(provider);
+
+    // Return most recent events first
+    const recent = [...cachedEvents].reverse().slice(0, limit);
 
     return NextResponse.json(
       {
-        events,
-        total: events.length,
+        events: recent,
+        total: cachedEvents.length,
+        scannedToBlock: lastScannedBlock,
         source: "onchain",
       },
       {
-        headers: { "Cache-Control": "s-maxage=30, stale-while-revalidate=60" },
+        headers: { "Cache-Control": "s-maxage=15, stale-while-revalidate=30" },
       }
     );
   } catch (e) {
     return NextResponse.json(
-      { events: [], total: 0, error: String(e), source: "error" },
+      { events: [], total: cachedEvents.length, error: String(e), source: "error" },
       { status: 503 }
     );
   }
