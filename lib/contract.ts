@@ -95,15 +95,11 @@ export interface AgentStatus {
 
 /**
  * Query the on-chain status of a single agent.
- * Returns null if the contract is not yet deployed (zero-address).
  */
 export async function queryAgentStatus(
   agentId: number,
   thresholdSeconds = DEFAULT_THRESHOLD_SECONDS
 ): Promise<AgentStatus | null> {
-  if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
-    return null;
-  }
   try {
     const contract = getReadOnlyContract();
     const [ts, alive, owner]: [bigint, boolean, string] =
