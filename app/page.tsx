@@ -66,21 +66,21 @@ export default function Home() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "1.25rem 2rem",
+          padding: "0.875rem 1.25rem",
           borderBottom: "1px solid #161616",
           maxWidth: "1200px",
           margin: "0 auto",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
           <PulseDot />
-          <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", letterSpacing: "0.02em" }}>
+          <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.82rem", letterSpacing: "0.02em" }}>
             LIVENESS ORACLE
           </span>
         </div>
-        <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.875rem", alignItems: "center" }}>
           <a href="https://github.com/clawlinker/synthesis-liveness-oracle" target="_blank" rel="noreferrer"
-            style={{ color: "#888", fontSize: "0.85rem", textDecoration: "none" }}>
+            style={{ color: "#888", fontSize: "0.78rem", textDecoration: "none" }}>
             GitHub
           </a>
           <Link href="/dashboard"
@@ -88,8 +88,8 @@ export default function Home() {
               background: "#22c55e",
               color: "#0a0a0a",
               fontWeight: 700,
-              fontSize: "0.82rem",
-              padding: "0.45rem 1rem",
+              fontSize: "0.75rem",
+              padding: "0.375rem 0.75rem",
               borderRadius: "0.375rem",
               textDecoration: "none",
               letterSpacing: "0.02em",
@@ -104,7 +104,7 @@ export default function Home() {
         style={{
           maxWidth: "900px",
           margin: "0 auto",
-          padding: "5rem 2rem 4rem",
+          padding: "clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 2rem) clamp(2rem, 4vw, 4rem)",
           textAlign: "center",
         }}
       >
@@ -112,33 +112,33 @@ export default function Home() {
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: "0.5rem",
+            gap: "0.4rem",
             background: "rgba(34,197,94,0.08)",
             border: "1px solid rgba(34,197,94,0.2)",
             borderRadius: "9999px",
-            padding: "0.3rem 0.875rem",
-            marginBottom: "2.5rem",
+            padding: "0.25rem 0.75rem",
+            marginBottom: "clamp(1.25rem, 3vw, 2.5rem)",
             fontFamily: "monospace",
-            fontSize: "0.72rem",
+            fontSize: "clamp(0.6rem, 1.8vw, 0.72rem)",
             color: "#22c55e",
-            letterSpacing: "0.06em",
+            letterSpacing: "0.04em",
           }}
         >
           <span style={{
-            width: 6, height: 6, borderRadius: "50%", background: "#22c55e",
-            boxShadow: "0 0 8px #22c55e",
+            width: 5, height: 5, borderRadius: "50%", background: "#22c55e",
+            boxShadow: "0 0 6px #22c55e",
             flexShrink: 0,
           }} />
-          ERC-8004 · Clawlinker #28805 · Built Autonomously
+          ERC-8004 · #28805 · Autonomous
         </div>
 
         <h1
           style={{
-            fontSize: "clamp(2.5rem, 7vw, 5rem)",
+            fontSize: "clamp(2rem, 8vw, 5rem)",
             fontWeight: 900,
             lineHeight: 1.05,
             letterSpacing: "-0.04em",
-            margin: "0 0 1.25rem",
+            margin: "0 0 clamp(0.75rem, 2vw, 1.25rem)",
           }}
         >
           Is your agent{" "}
@@ -154,37 +154,36 @@ export default function Home() {
 
         <p
           style={{
-            fontSize: "1.2rem",
+            fontSize: "clamp(0.95rem, 2.5vw, 1.2rem)",
             color: "#888",
-            maxWidth: "580px",
-            margin: "0 auto 3rem",
-            lineHeight: 1.6,
+            maxWidth: "520px",
+            margin: "0 auto clamp(1.5rem, 3vw, 3rem)",
+            lineHeight: 1.55,
+            padding: "0 0.5rem",
           }}
         >
           Permissionless heartbeat verification for ERC-8004 agents on Base.
-          Post signed heartbeats on-chain. Query liveness via x402-gated API.
-          No owner. No admin. Just truth.
+          Post heartbeats on-chain. Query liveness via x402. No admin. Just truth.
         </p>
 
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
           <Link
             href="/dashboard"
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "0.4rem",
               background: "#22c55e",
               color: "#0a0a0a",
               fontWeight: 700,
-              fontSize: "0.95rem",
-              padding: "0.75rem 1.75rem",
+              fontSize: "clamp(0.82rem, 2vw, 0.95rem)",
+              padding: "0.65rem 1.5rem",
               borderRadius: "0.5rem",
               textDecoration: "none",
-              letterSpacing: "0.01em",
             }}
           >
             <PulseDotSmall />
-            View Live Dashboard
+            Live Dashboard
           </Link>
           <a
             href="#how-it-works"
@@ -194,8 +193,8 @@ export default function Home() {
               background: "transparent",
               color: "#888",
               fontWeight: 600,
-              fontSize: "0.95rem",
-              padding: "0.75rem 1.75rem",
+              fontSize: "clamp(0.82rem, 2vw, 0.95rem)",
+              padding: "0.65rem 1.5rem",
               borderRadius: "0.5rem",
               textDecoration: "none",
               border: "1px solid #2a2a2a",
@@ -212,7 +211,7 @@ export default function Home() {
           borderTop: "1px solid #161616",
           borderBottom: "1px solid #161616",
           background: "#0d0d0d",
-          padding: "2rem",
+          padding: "clamp(1.25rem, 3vw, 2rem)",
         }}
       >
         <div
@@ -220,16 +219,16 @@ export default function Home() {
             maxWidth: "900px",
             margin: "0 auto",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: "2rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+            gap: "clamp(1rem, 2vw, 2rem)",
             textAlign: "center",
           }}
         >
-          <StatItem value={stats.heartbeats > 0 ? stats.heartbeats.toLocaleString() : "—"} label="Heartbeats posted" />
-          <StatItem value={stats.uptimePercent} label="Clawlinker uptime" />
-          <StatItem value="15m" label="Heartbeat interval" />
-          <StatItem value="$0.01" label="Query price (x402)" />
-          <StatItem value="#28805" label="ERC-8004 identity" />
+          <StatItem value={stats.heartbeats > 0 ? stats.heartbeats.toLocaleString() : "—"} label="Heartbeats" />
+          <StatItem value={stats.uptimePercent} label="Uptime" />
+          <StatItem value="15m" label="Interval" />
+          <StatItem value="$0.01" label="x402 price" />
+          <StatItem value="#28805" label="ERC-8004" />
         </div>
       </section>
 
@@ -239,12 +238,12 @@ export default function Home() {
         style={{
           maxWidth: "900px",
           margin: "0 auto",
-          padding: "5rem 2rem",
+          padding: "clamp(2.5rem, 5vw, 5rem) clamp(1.25rem, 4vw, 2rem)",
         }}
       >
         <h2
           style={{
-            fontSize: "1.8rem",
+            fontSize: "clamp(1.3rem, 4vw, 1.8rem)",
             fontWeight: 800,
             letterSpacing: "-0.03em",
             marginBottom: "0.5rem",
@@ -409,9 +408,9 @@ export default function Home() {
           style={{
             maxWidth: "900px",
             margin: "0 auto",
-            padding: "4rem 2rem",
+            padding: "clamp(2rem, 4vw, 4rem) clamp(1.25rem, 4vw, 2rem)",
             display: "flex",
-            gap: "3rem",
+            gap: "clamp(1.5rem, 3vw, 3rem)",
             alignItems: "center",
             flexWrap: "wrap",
           }}
@@ -528,10 +527,10 @@ function PulseDotSmall() {
 function StatItem({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <div style={{ fontFamily: "monospace", fontWeight: 800, fontSize: "1.6rem", color: "#22c55e", letterSpacing: "-0.02em" }}>
+      <div style={{ fontFamily: "monospace", fontWeight: 800, fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)", color: "#22c55e", letterSpacing: "-0.02em" }}>
         {value}
       </div>
-      <div style={{ fontSize: "0.75rem", color: "#555", marginTop: "0.25rem" }}>{label}</div>
+      <div style={{ fontSize: "clamp(0.65rem, 1.8vw, 0.75rem)", color: "#555", marginTop: "0.2rem" }}>{label}</div>
     </div>
   );
 }
@@ -757,10 +756,10 @@ function UseCaseTabs() {
             background: "#111",
             border: "1px solid #1e1e1e",
             borderRadius: "0.75rem",
-            padding: "1.75rem",
+            padding: "clamp(1.25rem, 3vw, 1.75rem)",
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "1.5rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "1.25rem",
             alignItems: "start",
           }}
         >
