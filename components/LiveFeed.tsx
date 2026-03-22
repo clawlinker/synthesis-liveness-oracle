@@ -139,7 +139,7 @@ export default function LiveFeed({ maxEntries = 14 }: LiveFeedProps) {
                 background: i === 0 ? "rgba(34,197,94,0.04)" : "transparent",
               }}
             >
-              <StatusIndicator status={getStatus(entry.timestamp)} size="sm" />
+              <StatusIndicator status="alive" size="sm" />
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
