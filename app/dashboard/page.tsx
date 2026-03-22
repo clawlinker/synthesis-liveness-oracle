@@ -6,71 +6,14 @@ import HeartbeatCard, { AgentHeartbeatData } from "@/components/HeartbeatCard";
 import LiveFeed from "@/components/LiveFeed";
 import StatusIndicator from "@/components/StatusIndicator";
 
-// ─── Mock agent data ──────────────────────────────────────────────────────────
-// In production this comes from on-chain events / API queries
+// ─── Config ───────────────────────────────────────────────────────────────────
 
-const now = () => Math.floor(Date.now() / 1000);
-
-const INITIAL_AGENTS: AgentHeartbeatData[] = [
-  {
-    agentId: 28805,
-    name: "Clawlinker",
-    lastSeenTs: now() - 312,
-    uptimePercent: 99.7,
-    heartbeatInterval: 15 * 60,
-    totalHeartbeats: 6721,
-    network: "Base",
-  },
-  {
-    agentId: 8821,
-    name: "Molttail",
-    lastSeenTs: now() - 847,
-    uptimePercent: 98.2,
-    heartbeatInterval: 15 * 60,
-    totalHeartbeats: 4102,
-    network: "Base",
-  },
-  {
-    agentId: 14503,
-    name: "BasePilot",
-    lastSeenTs: now() - 1203,
-    uptimePercent: 97.5,
-    heartbeatInterval: 30 * 60,
-    totalHeartbeats: 2891,
-    network: "Base",
-  },
-  {
-    agentId: 3317,
-    name: "VaultBot",
-    lastSeenTs: now() - 4210,
-    uptimePercent: 95.1,
-    heartbeatInterval: 60 * 60,
-    totalHeartbeats: 1204,
-    network: "Base",
-  },
-  {
-    agentId: 7001,
-    name: "NexAgent",
-    lastSeenTs: now() - 90000,
-    uptimePercent: 72.3,
-    heartbeatInterval: 15 * 60,
-    totalHeartbeats: 9843,
-    network: "Base",
-  },
-  {
-    agentId: 19988,
-    name: "Arbiter",
-    lastSeenTs: now() - 3600 * 3,
-    uptimePercent: 88.4,
-    heartbeatInterval: 30 * 60,
-    totalHeartbeats: 3301,
-    network: "Base",
-  },
-];
+const CONTRACT_ADDRESS = "0x3f6395B9535DD82B0e94028e0E818dfccafcCF87";
+const TRACKED_AGENTS = [28805]; // Add more agent IDs here as they register
 
 function getStatusLevel(lastSeenTs: number): "alive" | "stale" | "dead" | "unknown" {
   if (lastSeenTs === 0) return "unknown";
-  const age = now() - lastSeenTs;
+  const age = Math.floor(Date.now() / 1000) - lastSeenTs;
   if (age < 20 * 60) return "alive";
   if (age < 60 * 60) return "stale";
   return "dead";
@@ -79,48 +22,61 @@ function getStatusLevel(lastSeenTs: number): "alive" | "stale" | "dead" | "unkno
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [agents, setAgents] = useState<AgentHeartbeatData[]>(INITIAL_AGENTS);
+  const [agents, setAgents] = useState<AgentHeartbeatData[]>([]);
   const [search, setSearch] = useState("");
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [, tick] = useState(0);
 
-  // Auto-refresh every 30 seconds
-  const refresh = useCallback(() => {
+  const fetchAgents = useCallback(async () => {
     setIsRefreshing(true);
-    // Simulate fetching fresh data — in production calls /api/heartbeat/{id}
-    setTimeout(() => {
-      // Simulate Clawlinker posting a new heartbeat occasionally
-      setAgents((prev) =>
-        prev.map((a) =>
-          a.agentId === 28805 && now() - a.lastSeenTs > 14 * 60
-            ? { ...a, lastSeenTs: now(), totalHeartbeats: a.totalHeartbeats + 1 }
-            : a
-        )
+    try {
+      const results = await Promise.all(
+        TRACKED_AGENTS.map(async (agentId) => {
+          const res = await fetch(`/api/heartbeat/${agentId}`);
+          if (!res.ok) return null;
+          return res.json();
+        })
       );
+
+      const agentData: AgentHeartbeatData[] = results
+        .filter(Boolean)
+        .map((r) => ({
+          agentId: r.agentId,
+          name: r.agentId === 28805 ? "Clawlinker" : `Agent #${r.agentId}`,
+          lastSeenTs: r.lastSeen,
+          uptimePercent: r.uptimePercent ?? 0,
+          heartbeatInterval: 15 * 60,
+          totalHeartbeats: 0, // TODO: count from events
+          network: "Base",
+          owner: r.owner,
+        }));
+
+      setAgents(agentData);
       setLastRefresh(new Date());
+    } catch (e) {
+      console.error("Failed to fetch agents:", e);
+    } finally {
       setIsRefreshing(false);
-    }, 600);
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(refresh, 30_000);
-    // Tick every 10s to update "X ago" labels
+    fetchAgents();
+    const interval = setInterval(fetchAgents, 30_000);
     const tickInterval = setInterval(() => tick((n) => n + 1), 10_000);
     return () => {
       clearInterval(interval);
       clearInterval(tickInterval);
     };
-  }, [refresh]);
+  }, [fetchAgents]);
 
-  // Filter agents
   const filtered = agents.filter((a) => {
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
-    return (
-      a.name.toLowerCase().includes(q) ||
-      String(a.agentId).includes(q)
-    );
+    return a.name.toLowerCase().includes(q) || String(a.agentId).includes(q);
   });
 
   const aliveCount = agents.filter((a) => getStatusLevel(a.lastSeenTs) === "alive").length;
@@ -164,7 +120,7 @@ export default function Dashboard() {
             {isRefreshing ? "Refreshing…" : `Updated ${lastRefresh.toLocaleTimeString()}`}
           </span>
           <button
-            onClick={refresh}
+            onClick={fetchAgents}
             disabled={isRefreshing}
             style={{
               background: "transparent",
@@ -249,13 +205,21 @@ export default function Dashboard() {
               )}
             </div>
 
-            {filtered.length === 0 ? (
+            {loading ? (
               <div style={{
                 background: "#111", border: "1px solid #1e1e1e", borderRadius: "0.75rem",
                 padding: "3rem", textAlign: "center", color: "#444",
                 fontFamily: "monospace", fontSize: "0.82rem",
               }}>
-                No agents found for &quot;{search}&quot;
+                Loading on-chain data…
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{
+                background: "#111", border: "1px solid #1e1e1e", borderRadius: "0.75rem",
+                padding: "3rem", textAlign: "center", color: "#444",
+                fontFamily: "monospace", fontSize: "0.82rem",
+              }}>
+                {search ? `No agents found for "${search}"` : "No agents registered yet"}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -277,7 +241,7 @@ export default function Dashboard() {
                 LIVE FEED
               </h2>
             </div>
-            <LiveFeed maxEntries={14} autoAnimate />
+            <LiveFeed maxEntries={14} />
 
             {/* Contract info */}
             <div style={{
@@ -296,11 +260,22 @@ export default function Dashboard() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <span style={{ color: "#555" }}>Address</span>
-                <span style={{ color: "#555" }}>Deploying…</span>
+                <a
+                  href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#22c55e", textDecoration: "none" }}
+                >
+                  {CONTRACT_ADDRESS.slice(0, 6)}…{CONTRACT_ADDRESS.slice(-4)}
+                </a>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
                 <span style={{ color: "#555" }}>Threshold</span>
                 <span style={{ color: "#888" }}>20m</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#555" }}>Verified</span>
+                <span style={{ color: "#22c55e" }}>Sourcify ✓</span>
               </div>
             </div>
           </div>
