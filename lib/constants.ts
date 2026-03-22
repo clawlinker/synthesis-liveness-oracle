@@ -1,5 +1,5 @@
 // Contract address — update after deployment to Base
-export const CONTRACT_ADDRESS = "0x27a99fc7F16be0f5Cc93Fee50179cA7Db5e7d4A9";
+export const CONTRACT_ADDRESS = "0x3f6395B9535DD82B0e94028e0E818dfccafcCF87";
 
 // ERC-8004 IdentityRegistry on Base
 export const ERC8004_REGISTRY_BASE = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
