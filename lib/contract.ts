@@ -37,7 +37,7 @@ export const LIVENESS_ORACLE_ABI = [
     outputs: [{ name: "", type: "address" }],
   },
   {
-    name: "operators",
+    name: "operatorOf",
     type: "function",
     stateMutability: "view",
     inputs: [{ name: "agentId", type: "uint256" }],

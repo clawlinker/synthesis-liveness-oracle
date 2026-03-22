@@ -39,9 +39,12 @@ contract LivenessOracle {
     /// @notice agentId → block.timestamp of last heartbeat
     mapping(uint256 => uint256) private _lastSeen;
 
-    /// @notice agentId → operator address authorized to heartbeat
-    ///         address(0) means no delegate — only owner can heartbeat
-    mapping(uint256 => address) public operators;
+    /// @notice agentId → authorized operator + who authorized it
+    struct Delegation {
+        address operator;   // address allowed to heartbeat
+        address authorizer;  // owner at the time of authorization
+    }
+    mapping(uint256 => Delegation) private _delegations;
 
     // -------------------------------------------------------------------------
     // Events
@@ -70,6 +73,7 @@ contract LivenessOracle {
     /// @notice Authorize an operator to heartbeat on behalf of agentId.
     ///         Must be called by the current owner of the 8004 token.
     ///         Pass address(0) to revoke.
+    ///         Delegation auto-invalidates if the 8004 token is transferred.
     /// @param agentId  The ERC-8004 agent token ID
     /// @param operator The address allowed to call heartbeat(agentId)
     function authorize(uint256 agentId, address operator) external {
@@ -77,8 +81,21 @@ contract LivenessOracle {
             identityRegistry.ownerOf(agentId) == msg.sender,
             "LivenessOracle: not token owner"
         );
-        operators[agentId] = operator;
+        _delegations[agentId] = Delegation(operator, msg.sender);
         emit OperatorSet(agentId, operator);
+    }
+
+    /// @notice Returns the active operator for agentId, or address(0) if
+    ///         none set or the delegation was invalidated by a token transfer.
+    function operatorOf(uint256 agentId) public view returns (address) {
+        Delegation memory d = _delegations[agentId];
+        if (d.operator == address(0)) return address(0);
+        // Auto-invalidate if token has changed hands since authorization
+        try identityRegistry.ownerOf(agentId) returns (address currentOwner) {
+            return (currentOwner == d.authorizer) ? d.operator : address(0);
+        } catch {
+            return address(0);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -87,12 +104,12 @@ contract LivenessOracle {
 
     /// @notice Record a heartbeat for agentId. Caller must be either:
     ///         - the current 8004 token owner, OR
-    ///         - the authorized operator for this agentId
+    ///         - the authorized operator (if delegation is still valid)
     /// @param agentId  Numeric ERC-8004 agent identifier
     function heartbeat(uint256 agentId) external {
         address owner = identityRegistry.ownerOf(agentId);
         require(
-            msg.sender == owner || msg.sender == operators[agentId],
+            msg.sender == owner || msg.sender == operatorOf(agentId),
             "LivenessOracle: unauthorized"
         );
         _lastSeen[agentId] = block.timestamp;
@@ -118,7 +135,8 @@ contract LivenessOracle {
         return (block.timestamp - ts) <= thresholdSeconds;
     }
 
-    /// @notice Full status: lastSeen, alive flag, owner, operator
+    /// @notice Full status: lastSeen, alive flag, owner, operator.
+    ///         Never reverts — returns address(0) for non-existent tokens.
     function status(
         uint256 agentId,
         uint256 thresholdSeconds
@@ -134,7 +152,11 @@ contract LivenessOracle {
     {
         ts = _lastSeen[agentId];
         alive = ts != 0 && (block.timestamp - ts) <= thresholdSeconds;
-        owner = identityRegistry.ownerOf(agentId);
-        operator = operators[agentId];
+        try identityRegistry.ownerOf(agentId) returns (address _owner) {
+            owner = _owner;
+        } catch {
+            owner = address(0);
+        }
+        operator = operatorOf(agentId);
     }
 }
