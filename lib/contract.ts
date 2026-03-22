@@ -8,7 +8,6 @@ import {
 // ─── ABI ─────────────────────────────────────────────────────────────────────
 
 export const LIVENESS_ORACLE_ABI = [
-  // Constructor takes identityRegistry address (not in ABI, but documenting)
   // Write
   {
     name: "heartbeat",
@@ -17,30 +16,12 @@ export const LIVENESS_ORACLE_ABI = [
     inputs: [{ name: "agentId", type: "uint256" }],
     outputs: [],
   },
-  // Write — authorize operator
-  {
-    name: "authorize",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "agentId", type: "uint256" },
-      { name: "operator", type: "address" },
-    ],
-    outputs: [],
-  },
   // Reads
   {
     name: "identityRegistry",
     type: "function",
     stateMutability: "view",
     inputs: [],
-    outputs: [{ name: "", type: "address" }],
-  },
-  {
-    name: "operatorOf",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "agentId", type: "uint256" }],
     outputs: [{ name: "", type: "address" }],
   },
   {
@@ -72,7 +53,6 @@ export const LIVENESS_ORACLE_ABI = [
       { name: "ts", type: "uint256" },
       { name: "alive", type: "bool" },
       { name: "owner", type: "address" },
-      { name: "operator", type: "address" },
     ],
   },
   // Events
@@ -83,14 +63,6 @@ export const LIVENESS_ORACLE_ABI = [
       { name: "agentId", type: "uint256", indexed: true },
       { name: "sender", type: "address", indexed: true },
       { name: "timestamp", type: "uint256", indexed: false },
-    ],
-  },
-  {
-    name: "OperatorSet",
-    type: "event",
-    inputs: [
-      { name: "agentId", type: "uint256", indexed: true },
-      { name: "operator", type: "address", indexed: true },
     ],
   },
 ] as const;
@@ -119,7 +91,6 @@ export interface AgentStatus {
   secondsAgo: number;
   humanAge: string;
   owner: string;
-  operator: string;
 }
 
 /**
@@ -135,7 +106,7 @@ export async function queryAgentStatus(
   }
   try {
     const contract = getReadOnlyContract();
-    const [ts, alive, owner, operator]: [bigint, boolean, string, string] =
+    const [ts, alive, owner]: [bigint, boolean, string] =
       await contract.status(agentId, thresholdSeconds);
     const lastSeenTs = Number(ts);
     const nowTs = Math.floor(Date.now() / 1000);
@@ -147,7 +118,6 @@ export async function queryAgentStatus(
       secondsAgo,
       humanAge: formatAge(secondsAgo),
       owner,
-      operator,
     };
   } catch {
     return null;
