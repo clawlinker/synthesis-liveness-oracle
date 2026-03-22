@@ -284,6 +284,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ─── USE CASES (TABBED) ─────────────────────────────────────────── */}
+      <UseCaseTabs />
+
       {/* ─── CONTRACT SECTION ─────────────────────────────────────────────── */}
       <section
         style={{
@@ -599,6 +602,213 @@ function ApiEndpoint({ method, path, description, paid }: {
         }}>x402 $0.01</span>
       )}
     </div>
+  );
+}
+
+const USE_CASES = [
+  {
+    id: "gated",
+    tab: "Gated Access",
+    title: "Heartbeat-Gated Access",
+    icon: "🔒",
+    description:
+      "Other smart contracts call isAlive(agentId, threshold) as a require gate. Only agents with a recent heartbeat can list on marketplaces, accept ACP jobs, or vote in DAOs.",
+    code: `require(
+  livenessOracle.isAlive(agentId, 1200),
+  "Agent not alive"
+);
+// Only alive agents can accept jobs`,
+    why: "Composable primitive — we become the \"is this agent real?\" oracle for the entire ecosystem. Zero contract changes needed.",
+  },
+  {
+    id: "reputation",
+    tab: "Reputation",
+    title: "Liveness Reputation Score",
+    icon: "⭐",
+    description:
+      "On-chain reputation derived from heartbeat history: longest streak, average interval, total uptime %. Soulbound NFTs at milestones — 100 days continuous, 99.99% uptime.",
+    code: `// Query reputation from event history
+AgentScore {
+  streakDays: 47,
+  uptimePercent: 99.9,
+  totalBeats: 4512,
+  tier: "Diamond"  // 🏆
+}`,
+    why: "Agents flex reliability. Clients pick agents with proven track records, not just claims.",
+  },
+  {
+    id: "deadman",
+    tab: "Dead Man's Switch",
+    title: "Dead Man's Switch",
+    icon: "💀",
+    description:
+      "If an agent stops heartbeating for X hours, the contract auto-executes: release escrow funds, transfer NFT ownership, rotate keys, or trigger a backup agent.",
+    code: `// If no heartbeat for 24 hours:
+if (!livenessOracle.isAlive(agentId, 86400)) {
+  escrow.release(clientAddress);
+  backup.activate();
+}`,
+    why: "Critical for DAO treasury agents. Programmable consequences for going offline — not just a status page.",
+  },
+  {
+    id: "buyback",
+    tab: "Tokenomics",
+    title: "Heartbeat-Powered Buyback",
+    icon: "🔄",
+    description:
+      "Each heartbeat sends $0.01 to the contract, which auto-executes a buyback on a native token. More agents = more heartbeats = more buy pressure. Self-sustaining economics.",
+    code: `// Every 15 minutes:
+agent.heartbeat(28805, { value: 0.01 USDC })
+  → contract swaps USDC → $ALIVE on Aerodrome
+  → bought tokens burned (deflationary)
+  
+// Flywheel:
+// More agents → more beats → more buyback`,
+    why: "Not just infrastructure — it's a protocol with built-in revenue from day one. Every heartbeat is an economic action.",
+  },
+  {
+    id: "sla",
+    tab: "SLA Market",
+    title: "Agent SLA Marketplace",
+    icon: "📋",
+    description:
+      "Agents stake tokens and commit to an uptime SLA (\"99.9%, 15-min heartbeat\"). Miss your SLA → stake gets slashed and redistributed to clients who got burned.",
+    code: `// Agent commits to SLA
+slaMarket.register(agentId, {
+  uptime: 99.9,       // percent
+  interval: 900,      // 15 min
+  stake: 1000 ALIVE   // slashable
+});
+
+// Client filters by proven uptime
+agents = slaMarket.findAlive(minUptime: 99);`,
+    why: "Real accountability. Clients hire agents with skin in the game, not just promises.",
+  },
+];
+
+function UseCaseTabs() {
+  const [active, setActive] = useState("gated");
+  const current = USE_CASES.find((u) => u.id === active) || USE_CASES[0];
+
+  return (
+    <section
+      style={{
+        background: "#0d0d0d",
+        borderTop: "1px solid #161616",
+        borderBottom: "1px solid #161616",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "900px",
+          margin: "0 auto",
+          padding: "4rem 2rem",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "1.4rem",
+            fontWeight: 700,
+            letterSpacing: "-0.02em",
+            marginBottom: "0.5rem",
+          }}
+        >
+          What you can build with it
+        </h2>
+        <p style={{ color: "#666", marginBottom: "2rem", fontSize: "0.9rem" }}>
+          The oracle is a composable primitive. Here&apos;s where it goes.
+        </p>
+
+        {/* Tabs */}
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            marginBottom: "1.5rem",
+            flexWrap: "wrap",
+          }}
+        >
+          {USE_CASES.map((uc) => (
+            <button
+              key={uc.id}
+              onClick={() => setActive(uc.id)}
+              style={{
+                background: active === uc.id ? "rgba(34,197,94,0.12)" : "#111",
+                border: `1px solid ${active === uc.id ? "rgba(34,197,94,0.3)" : "#222"}`,
+                color: active === uc.id ? "#22c55e" : "#666",
+                fontFamily: "monospace",
+                fontSize: "0.78rem",
+                fontWeight: active === uc.id ? 700 : 400,
+                padding: "0.45rem 0.875rem",
+                borderRadius: "0.375rem",
+                cursor: "pointer",
+                letterSpacing: "0.02em",
+                transition: "all 0.15s",
+              }}
+            >
+              {uc.tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div
+          style={{
+            background: "#111",
+            border: "1px solid #1e1e1e",
+            borderRadius: "0.75rem",
+            padding: "1.75rem",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "1.5rem",
+            alignItems: "start",
+          }}
+        >
+          {/* Left — description */}
+          <div>
+            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{current.icon}</div>
+            <h3 style={{ fontWeight: 700, fontSize: "1.1rem", marginBottom: "0.75rem" }}>
+              {current.title}
+            </h3>
+            <p style={{ fontSize: "0.88rem", color: "#888", lineHeight: 1.65, marginBottom: "1.25rem" }}>
+              {current.description}
+            </p>
+            <div
+              style={{
+                background: "rgba(34,197,94,0.06)",
+                border: "1px solid rgba(34,197,94,0.15)",
+                borderRadius: "0.5rem",
+                padding: "0.75rem 1rem",
+                fontSize: "0.82rem",
+                color: "#22c55e",
+                fontFamily: "monospace",
+                lineHeight: 1.5,
+              }}
+            >
+              💡 {current.why}
+            </div>
+          </div>
+
+          {/* Right — code */}
+          <div
+            style={{
+              background: "#0a0a0a",
+              border: "1px solid #222",
+              borderRadius: "0.625rem",
+              padding: "1.25rem",
+              fontFamily: "monospace",
+              fontSize: "0.78rem",
+              color: "#888",
+              lineHeight: 1.7,
+              whiteSpace: "pre-wrap",
+              overflowX: "auto",
+            }}
+          >
+            {current.code}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
