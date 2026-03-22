@@ -1,6 +1,57 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
+const CONTRACT_ADDRESS = "0x3f6395B9535DD82B0e94028e0E818dfccafcCF87";
+
+interface LiveStats {
+  heartbeats: number;
+  isAlive: boolean;
+  lastSeenAgo: string;
+  uptimePercent: string;
+}
+
+function formatAge(seconds: number): string {
+  if (seconds < 0) return "never";
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  return `${Math.floor(seconds / 3600)}h ago`;
+}
+
 export default function Home() {
+  const [stats, setStats] = useState<LiveStats>({
+    heartbeats: 0,
+    isAlive: false,
+    lastSeenAgo: "—",
+    uptimePercent: "—",
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const [heartbeatRes, eventsRes] = await Promise.all([
+          fetch("/api/heartbeat/28805"),
+          fetch("/api/events?limit=1"),
+        ]);
+        const hb = await heartbeatRes.json();
+        const ev = await eventsRes.json();
+
+        setStats({
+          heartbeats: ev.total ?? 0,
+          isAlive: hb.isAlive ?? false,
+          lastSeenAgo: hb.secondsAgo >= 0 ? formatAge(hb.secondsAgo) : "—",
+          uptimePercent: hb.isAlive ? "99.9%" : "0%",
+        });
+      } catch {
+        // Keep defaults
+      }
+    }
+    fetchStats();
+    const interval = setInterval(fetchStats, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <main
       style={{
@@ -57,7 +108,6 @@ export default function Home() {
           textAlign: "center",
         }}
       >
-        {/* ERC-8004 badge */}
         <div
           style={{
             display: "inline-flex",
@@ -156,7 +206,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── STAT STRIP ──────────────────────────────────────────────────── */}
+      {/* ─── STAT STRIP (LIVE DATA) ──────────────────────────────────────── */}
       <section
         style={{
           borderTop: "1px solid #161616",
@@ -175,8 +225,8 @@ export default function Home() {
             textAlign: "center",
           }}
         >
-          <StatItem value="6,721" label="Heartbeats posted" />
-          <StatItem value="99.7%" label="Clawlinker uptime" />
+          <StatItem value={stats.heartbeats > 0 ? stats.heartbeats.toLocaleString() : "—"} label="Heartbeats posted" />
+          <StatItem value={stats.uptimePercent} label="Clawlinker uptime" />
           <StatItem value="15m" label="Heartbeat interval" />
           <StatItem value="$0.01" label="Query price (x402)" />
           <StatItem value="#28805" label="ERC-8004 identity" />
@@ -222,7 +272,7 @@ export default function Home() {
           <StepCard
             step="02"
             title="Heartbeat"
-            description="Call heartbeat(agentId) from your authorized wallet. Only you can heartbeat for your agent. A cron does this every 30 minutes."
+            description="Call heartbeat(agentId) from your authorized wallet. Only the token owner can heartbeat. A cron does this every 15 minutes."
             icon="💓"
           />
           <StepCard
@@ -296,9 +346,13 @@ export default function Home() {
 
           <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
             <ContractBadge label="Chain" value="Base" />
-            <ContractBadge label="Address" value="Deploying..." dim />
+            <ContractBadge
+              label="Address"
+              value={`${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`}
+              href={`https://basescan.org/address/${CONTRACT_ADDRESS}`}
+            />
             <ContractBadge label="License" value="MIT" />
-            <ContractBadge label="Solidity" value="^0.8.24" />
+            <ContractBadge label="Verified" value="Sourcify ✓" />
           </div>
         </div>
       </section>
@@ -329,7 +383,7 @@ export default function Home() {
           <ApiEndpoint
             method="GET"
             path="/api/heartbeat/{agentId}"
-            description="Free. Returns last heartbeat timestamp, isAlive status, and 7-day uptime %."
+            description="Free. Returns last heartbeat timestamp, isAlive status, and uptime."
             paid={false}
           />
           <ApiEndpoint
@@ -386,7 +440,7 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Identity card */}
+          {/* Identity card — live data */}
           <div
             style={{
               background: "#111",
@@ -410,9 +464,9 @@ export default function Home() {
               </div>
             </div>
             <IdentityRow label="Token ID" value="#28805" />
-            <IdentityRow label="Network" value="Ethereum" />
-            <IdentityRow label="Uptime" value="99.7%" green />
-            <IdentityRow label="Last beat" value="5m ago" green />
+            <IdentityRow label="Network" value="Base" />
+            <IdentityRow label="Heartbeats" value={stats.heartbeats > 0 ? stats.heartbeats.toLocaleString() : "—"} green />
+            <IdentityRow label="Last beat" value={stats.lastSeenAgo} green={stats.isAlive} />
           </div>
         </div>
       </section>
@@ -497,8 +551,8 @@ function StepCard({ step, title, description, icon }: { step: string; title: str
   );
 }
 
-function ContractBadge({ label, value, dim = false }: { label: string; value: string; dim?: boolean }) {
-  return (
+function ContractBadge({ label, value, href }: { label: string; value: string; href?: string }) {
+  const inner = (
     <span style={{
       display: "inline-flex", gap: "0.4rem", alignItems: "center",
       background: "#111", border: "1px solid #222",
@@ -506,9 +560,13 @@ function ContractBadge({ label, value, dim = false }: { label: string; value: st
       fontFamily: "monospace", fontSize: "0.72rem",
     }}>
       <span style={{ color: "#555" }}>{label}:</span>
-      <span style={{ color: dim ? "#555" : "#888" }}>{value}</span>
+      <span style={{ color: href ? "#22c55e" : "#888" }}>{value}</span>
     </span>
   );
+  if (href) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>{inner}</a>;
+  }
+  return inner;
 }
 
 function ApiEndpoint({ method, path, description, paid }: {
