@@ -32,15 +32,19 @@ export default function Dashboard() {
   const fetchAgents = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const results = await Promise.all(
-        TRACKED_AGENTS.map(async (agentId) => {
-          const res = await fetch(`/api/heartbeat/${agentId}`);
-          if (!res.ok) return null;
-          return res.json();
-        })
-      );
+      // Fetch status and event count in parallel
+      const [statusResults, eventsRes] = await Promise.all([
+        Promise.all(
+          TRACKED_AGENTS.map(async (agentId) => {
+            const res = await fetch(`/api/heartbeat/${agentId}`);
+            if (!res.ok) return null;
+            return res.json();
+          })
+        ),
+        fetch("/api/events?limit=50").then((r) => r.ok ? r.json() : { total: 0 }),
+      ]);
 
-      const agentData: AgentHeartbeatData[] = results
+      const agentData: AgentHeartbeatData[] = statusResults
         .filter(Boolean)
         .map((r) => ({
           agentId: r.agentId,
@@ -48,7 +52,7 @@ export default function Dashboard() {
           lastSeenTs: r.lastSeen,
           uptimePercent: r.uptimePercent ?? 0,
           heartbeatInterval: 15 * 60,
-          totalHeartbeats: 0, // TODO: count from events
+          totalHeartbeats: eventsRes.total ?? 0,
           network: "Base",
           owner: r.owner,
         }));

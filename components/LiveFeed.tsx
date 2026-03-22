@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import StatusIndicator, { StatusLevel } from "./StatusIndicator";
 
 interface FeedEntry {
-  id: string;
   agentId: number;
   agentName: string;
-  ts: number;
+  timestamp: number;
   txHash: string;
   block: number;
 }
@@ -16,17 +15,9 @@ interface LiveFeedProps {
   maxEntries?: number;
 }
 
-const AGENT_NAMES: Record<number, string> = {
-  28805: "Clawlinker",
-};
-
-const CONTRACT = "0x3f6395B9535DD82B0e94028e0E818dfccafcCF87";
-const BASE_RPC = "https://mainnet.base.org";
-// Heartbeat event topic: keccak256("Heartbeat(uint256,address,uint256)")
-const HEARTBEAT_TOPIC = "0x6941f6f57b822a3d508e7a95fc075f8ee16007b0b104ea7bcf983249723eb3cf";
-
 function formatTs(ts: number): string {
   const age = Math.floor(Date.now() / 1000) - ts;
+  if (age < 0) return "just now";
   if (age < 60) return `${age}s ago`;
   if (age < 3600) return `${Math.floor(age / 60)}m ago`;
   if (age < 86400) return `${Math.floor(age / 3600)}h ago`;
@@ -40,81 +31,27 @@ function getStatus(ts: number): StatusLevel {
   return "dead";
 }
 
-async function fetchRecentHeartbeats(count: number): Promise<FeedEntry[]> {
-  try {
-    // Get latest block
-    const blockRes = await fetch(BASE_RPC, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] }),
-    });
-    const { result: latestHex } = await blockRes.json();
-    const latest = parseInt(latestHex, 16);
-
-    // Look back ~6 hours (~10800 blocks at 2s/block)
-    const fromBlock = Math.max(0, latest - 10800);
-
-    // Fetch Heartbeat events
-    const logsRes = await fetch(BASE_RPC, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 2,
-        method: "eth_getLogs",
-        params: [{
-          address: CONTRACT,
-          topics: [HEARTBEAT_TOPIC],
-          fromBlock: "0x" + fromBlock.toString(16),
-          toBlock: "latest",
-        }],
-      }),
-    });
-    const { result: logs } = await logsRes.json();
-
-    if (!logs || !Array.isArray(logs)) return [];
-
-    // Parse events — newest first
-    const entries: FeedEntry[] = logs
-      .reverse()
-      .slice(0, count)
-      .map((log: { topics: string[]; data: string; transactionHash: string; blockNumber: string }, i: number) => {
-        const agentId = parseInt(log.topics[1], 16);
-        const timestamp = parseInt(log.data, 16);
-        return {
-          id: `${log.transactionHash}-${i}`,
-          agentId,
-          agentName: AGENT_NAMES[agentId] || `Agent #${agentId}`,
-          ts: timestamp,
-          txHash: log.transactionHash,
-          block: parseInt(log.blockNumber, 16),
-        };
-      });
-
-    return entries;
-  } catch (e) {
-    console.error("Failed to fetch heartbeat events:", e);
-    return [];
-  }
-}
-
-export default function LiveFeed({ maxEntries = 12 }: LiveFeedProps) {
+export default function LiveFeed({ maxEntries = 14 }: LiveFeedProps) {
   const [entries, setEntries] = useState<FeedEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [, forceRender] = useState(0);
 
   useEffect(() => {
-    fetchRecentHeartbeats(maxEntries).then((e) => {
-      setEntries(e);
-      setLoading(false);
-    });
+    async function fetchEvents() {
+      try {
+        const res = await fetch(`/api/events?limit=${maxEntries}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setEntries(data.events || []);
+      } catch (e) {
+        console.error("Failed to fetch events:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-    // Refresh every 60s
-    const interval = setInterval(() => {
-      fetchRecentHeartbeats(maxEntries).then(setEntries);
-    }, 60_000);
-
-    // Update "X ago" labels every 30s
+    fetchEvents();
+    const interval = setInterval(fetchEvents, 60_000);
     const tick = setInterval(() => forceRender((n) => n + 1), 30_000);
 
     return () => {
@@ -192,7 +129,7 @@ export default function LiveFeed({ maxEntries = 12 }: LiveFeedProps) {
         ) : (
           entries.map((entry, i) => (
             <div
-              key={entry.id}
+              key={`${entry.txHash}-${i}`}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -202,7 +139,7 @@ export default function LiveFeed({ maxEntries = 12 }: LiveFeedProps) {
                 background: i === 0 ? "rgba(34,197,94,0.04)" : "transparent",
               }}
             >
-              <StatusIndicator status={getStatus(entry.ts)} size="sm" />
+              <StatusIndicator status={getStatus(entry.timestamp)} size="sm" />
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
@@ -245,7 +182,7 @@ export default function LiveFeed({ maxEntries = 12 }: LiveFeedProps) {
                   whiteSpace: "nowrap",
                 }}
               >
-                {formatTs(entry.ts)}
+                {formatTs(entry.timestamp)}
               </div>
             </div>
           ))
