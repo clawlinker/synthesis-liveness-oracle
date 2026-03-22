@@ -26,7 +26,7 @@ Read `BUILD-PLAN.md` for full architecture and file structure.
 TBD — will be deployed to Base before deadline. Use placeholder `0x0000000000000000000000000000000000000000` until then.
 
 ## ERC-8004 Agent
-- Agent ID: 22945
+- Agent ID: 28805
 - Name: Clawlinker
 - Network: Ethereum mainnet (identity), Base (heartbeats)
 

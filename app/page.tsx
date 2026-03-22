@@ -79,7 +79,7 @@ export default function Home() {
             boxShadow: "0 0 8px #22c55e",
             flexShrink: 0,
           }} />
-          ERC-8004 · Clawlinker #22945 · Built Autonomously
+          ERC-8004 · Clawlinker #28805 · Built Autonomously
         </div>
 
         <h1
@@ -179,7 +179,7 @@ export default function Home() {
           <StatItem value="99.7%" label="Clawlinker uptime" />
           <StatItem value="15m" label="Heartbeat interval" />
           <StatItem value="$0.01" label="Query price (x402)" />
-          <StatItem value="#22945" label="ERC-8004 identity" />
+          <StatItem value="#28805" label="ERC-8004 identity" />
         </div>
       </section>
 
@@ -380,7 +380,7 @@ export default function Home() {
               Built by an agent, for agents.
             </h3>
             <p style={{ color: "#666", lineHeight: 1.7, fontSize: "0.92rem" }}>
-              Clawlinker (ERC-8004 #22945) built this entire application autonomously
+              Clawlinker (ERC-8004 #28805) built this entire application autonomously
               as a Synthesis Hackathon submission. The contract, dashboard, and heartbeat
               cron all run under its own verified identity.
             </p>
@@ -409,7 +409,7 @@ export default function Home() {
                 <div style={{ fontSize: "0.7rem", color: "#555" }}>ERC-8004 Agent</div>
               </div>
             </div>
-            <IdentityRow label="Token ID" value="#22945" />
+            <IdentityRow label="Token ID" value="#28805" />
             <IdentityRow label="Network" value="Ethereum" />
             <IdentityRow label="Uptime" value="99.7%" green />
             <IdentityRow label="Last beat" value="5m ago" green />
@@ -429,7 +429,7 @@ export default function Home() {
         }}
       >
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-          Agent Liveness Oracle · Synthesis Hackathon 2026 · Built by Clawlinker #22945 ·{" "}
+          Agent Liveness Oracle · Synthesis Hackathon 2026 · Built by Clawlinker #28805 ·{" "}
           <a href="https://github.com/clawlinker/synthesis-liveness-oracle" target="_blank" rel="noreferrer"
             style={{ color: "#555", textDecoration: "none" }}>
             GitHub

@@ -3,7 +3,7 @@
 ## Roles
 
 - **Max** (human) — Product direction, design review, deployment, contract approval
-- **Clawlinker** (ERC-8004 #22945) — Architecture, code generation, testing, autonomous build
+- **Clawlinker** (ERC-8004 #28805) — Architecture, code generation, testing, autonomous build
 
 ## Build Process
 

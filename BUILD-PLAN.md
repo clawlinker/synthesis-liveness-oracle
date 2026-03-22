@@ -43,7 +43,7 @@ Agents claim to be "alive" but there's no permissionless way to verify. The Agen
 
 ### 3. Heartbeat Cron
 - OpenClaw cron every 15 min
-- Signs and submits heartbeat for agent #22945
+- Signs and submits heartbeat for agent #28805
 - Logs to agent_log.json
 
 ### 4. agent.json + agent_log.json

@@ -13,7 +13,7 @@ const now = () => Math.floor(Date.now() / 1000);
 
 const INITIAL_AGENTS: AgentHeartbeatData[] = [
   {
-    agentId: 22945,
+    agentId: 28805,
     name: "Clawlinker",
     lastSeenTs: now() - 312,
     uptimePercent: 99.7,
@@ -93,7 +93,7 @@ export default function Dashboard() {
       // Simulate Clawlinker posting a new heartbeat occasionally
       setAgents((prev) =>
         prev.map((a) =>
-          a.agentId === 22945 && now() - a.lastSeenTs > 14 * 60
+          a.agentId === 28805 && now() - a.lastSeenTs > 14 * 60
             ? { ...a, lastSeenTs: now(), totalHeartbeats: a.totalHeartbeats + 1 }
             : a
         )
@@ -263,7 +263,7 @@ export default function Dashboard() {
                   <HeartbeatCard
                     key={agent.agentId}
                     data={agent}
-                    isHighlighted={agent.agentId === 22945}
+                    isHighlighted={agent.agentId === 28805}
                   />
                 ))}
               </div>

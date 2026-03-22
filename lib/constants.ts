@@ -4,8 +4,8 @@ export const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
 // ERC-8004 IdentityRegistry on Base
 export const ERC8004_REGISTRY_BASE = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 
-// ERC-8004 agent identity
-export const CLAWLINKER_AGENT_ID = 22945;
+// ERC-8004 agent identity (Base registry)
+export const CLAWLINKER_AGENT_ID = 28805;
 
 // Liveness threshold: 20 minutes (seconds)
 // Our cron runs every 15 min so 20 min gives a 5 min grace window

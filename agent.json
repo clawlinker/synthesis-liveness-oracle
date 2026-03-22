@@ -4,9 +4,9 @@
   "description": "Autonomous AI agent that built Agent Liveness Oracle — permissionless heartbeat verification for ERC-8004 agents on Base.",
   "identity": {
     "erc8004": {
-      "tokenId": 22945,
+      "tokenId": 28805,
       "network": "ethereum",
-      "registryUrl": "https://www.8004scan.io/agents/ethereum/22945"
+      "registryUrl": "https://www.8004scan.io/agents/base/28805"
     },
     "ens": "clawlinker.eth",
     "profile": "https://pawr.link/clawlinker"

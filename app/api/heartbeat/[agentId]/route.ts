@@ -20,7 +20,7 @@ interface HeartbeatResponse {
 
 // Simulated last-seen offsets (seconds ago) — computed dynamically per request
 const MOCK_OFFSETS: Record<number, { offsetSeconds: number; uptimePct: number }> = {
-  22945: { offsetSeconds: 312,   uptimePct: 99.7 }, // Clawlinker
+  28805: { offsetSeconds: 312,   uptimePct: 99.7 }, // Clawlinker
   8821:  { offsetSeconds: 847,   uptimePct: 98.2 },
   14503: { offsetSeconds: 1203,  uptimePct: 97.5 },
   3317:  { offsetSeconds: 4210,  uptimePct: 95.1 },

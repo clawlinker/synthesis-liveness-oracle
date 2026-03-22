@@ -18,18 +18,18 @@ interface LiveFeedProps {
 
 // Mock feed data seeded with realistic agent heartbeats
 const SEED_ENTRIES: FeedEntry[] = [
-  { id: "1", agentId: 22945, agentName: "Clawlinker", ts: Math.floor(Date.now() / 1000) - 312, txHash: "0x3a9f" },
+  { id: "1", agentId: 28805, agentName: "Clawlinker", ts: Math.floor(Date.now() / 1000) - 312, txHash: "0x3a9f" },
   { id: "2", agentId: 8821, agentName: "Molttail", ts: Math.floor(Date.now() / 1000) - 847, txHash: "0xb7c2" },
   { id: "3", agentId: 14503, agentName: "BasePilot", ts: Math.floor(Date.now() / 1000) - 1203, txHash: "0x91de" },
   { id: "4", agentId: 3317, agentName: "VaultBot", ts: Math.floor(Date.now() / 1000) - 2051, txHash: "0x4fa1" },
-  { id: "5", agentId: 22945, agentName: "Clawlinker", ts: Math.floor(Date.now() / 1000) - 2712, txHash: "0xc8e5" },
+  { id: "5", agentId: 28805, agentName: "Clawlinker", ts: Math.floor(Date.now() / 1000) - 2712, txHash: "0xc8e5" },
   { id: "6", agentId: 7001, agentName: "NexAgent", ts: Math.floor(Date.now() / 1000) - 3415, txHash: "0x2d07" },
   { id: "7", agentId: 19988, agentName: "Arbiter", ts: Math.floor(Date.now() / 1000) - 4100, txHash: "0x5b3c" },
   { id: "8", agentId: 8821, agentName: "Molttail", ts: Math.floor(Date.now() / 1000) - 4804, txHash: "0xa66d" },
 ];
 
 const AGENT_NAMES: Record<number, string> = {
-  22945: "Clawlinker",
+  28805: "Clawlinker",
   8821: "Molttail",
   14503: "BasePilot",
   3317: "VaultBot",

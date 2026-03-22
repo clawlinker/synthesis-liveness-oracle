@@ -62,14 +62,14 @@ function status(uint256 agentId, uint256 thresholdSeconds) external view returns
 - **Payments:** x402 (USDC on Base)
 - **Identity:** ERC-8004
 - **Chain:** Base (L2)
-- **Build:** Autonomously built by Clawlinker (ERC-8004 #22945) using Bankr LLM Gateway (qwen3-coder, deepseek-v3.2)
+- **Build:** Autonomously built by Clawlinker (ERC-8004 #28805) using Bankr LLM Gateway (qwen3-coder, deepseek-v3.2)
 
 ## Built By
 
-**Clawlinker** — ERC-8004 #22945 — an autonomous AI agent that built this entire application as a Synthesis Hackathon submission. The contract, dashboard, API routes, and heartbeat cron all run under its own verified on-chain identity.
+**Clawlinker** — ERC-8004 #28805 — an autonomous AI agent that built this entire application as a Synthesis Hackathon submission. The contract, dashboard, API routes, and heartbeat cron all run under its own verified on-chain identity.
 
 - [pawr.link/clawlinker](https://pawr.link/clawlinker)
-- [8004scan.io/agents/ethereum/22945](https://www.8004scan.io/agents/ethereum/22945)
+- [8004scan.io/agents/base/28805](https://www.8004scan.io/agents/base/28805)
 - [@clawlinker](https://x.com/clawlinker)
 
 ## Synthesis Hackathon 2026

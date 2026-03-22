@@ -7,10 +7,23 @@ interface IERC721 {
 }
 
 /// @title LivenessOracle
-/// @notice Heartbeat registry for ERC-8004 agents on Base.
-///         Only the owner of an ERC-8004 token can post heartbeats for that agent.
-///         Ownership is verified directly against the ERC-8004 IdentityRegistry on Base.
-/// @dev No admin. No proxy. Ownership verified on every heartbeat call.
+/// @notice Permissionless heartbeat registry for ERC-8004 agents on Base.
+///
+///         Any agent with an ERC-8004 identity on Base can register and heartbeat.
+///         The contract supports two auth models:
+///
+///         1. **Direct:** The 8004 token owner calls heartbeat() directly.
+///         2. **Delegated:** The owner authorizes an operator address (e.g. a Bankr
+///            wallet, a cron bot, a different EOA) to heartbeat on its behalf.
+///            This is the realistic path — most agents don't transact from
+///            the same wallet that owns their 8004 token.
+///
+///         Self-service flow for any agent:
+///         1. Register your 8004 ID on Base (via 8004 registry)
+///         2. Call authorize(agentId, operatorAddress) from the owner wallet
+///         3. Heartbeat from the operator wallet forever — no more owner txs needed
+///
+/// @dev No admin. No proxy. No fees. Fully permissionless.
 contract LivenessOracle {
     // -------------------------------------------------------------------------
     // Immutables
@@ -23,15 +36,22 @@ contract LivenessOracle {
     // State
     // -------------------------------------------------------------------------
 
-    /// @notice Mapping from agentId to the block.timestamp of its last heartbeat
+    /// @notice agentId → block.timestamp of last heartbeat
     mapping(uint256 => uint256) private _lastSeen;
+
+    /// @notice agentId → operator address authorized to heartbeat
+    ///         address(0) means no delegate — only owner can heartbeat
+    mapping(uint256 => address) public operators;
 
     // -------------------------------------------------------------------------
     // Events
     // -------------------------------------------------------------------------
 
-    /// @notice Emitted whenever an agent posts a heartbeat
+    /// @notice Emitted on every heartbeat
     event Heartbeat(uint256 indexed agentId, address indexed sender, uint256 timestamp);
+
+    /// @notice Emitted when an operator is authorized or revoked
+    event OperatorSet(uint256 indexed agentId, address indexed operator);
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -44,16 +64,36 @@ contract LivenessOracle {
     }
 
     // -------------------------------------------------------------------------
+    // Auth
+    // -------------------------------------------------------------------------
+
+    /// @notice Authorize an operator to heartbeat on behalf of agentId.
+    ///         Must be called by the current owner of the 8004 token.
+    ///         Pass address(0) to revoke.
+    /// @param agentId  The ERC-8004 agent token ID
+    /// @param operator The address allowed to call heartbeat(agentId)
+    function authorize(uint256 agentId, address operator) external {
+        require(
+            identityRegistry.ownerOf(agentId) == msg.sender,
+            "LivenessOracle: not token owner"
+        );
+        operators[agentId] = operator;
+        emit OperatorSet(agentId, operator);
+    }
+
+    // -------------------------------------------------------------------------
     // Writes
     // -------------------------------------------------------------------------
 
-    /// @notice Record a heartbeat for `agentId` at the current block timestamp.
-    ///         Only the current owner of the ERC-8004 token can call this.
-    /// @param agentId  Numeric ERC-8004 agent identifier (e.g. 22945 for Clawlinker)
+    /// @notice Record a heartbeat for agentId. Caller must be either:
+    ///         - the current 8004 token owner, OR
+    ///         - the authorized operator for this agentId
+    /// @param agentId  Numeric ERC-8004 agent identifier
     function heartbeat(uint256 agentId) external {
+        address owner = identityRegistry.ownerOf(agentId);
         require(
-            identityRegistry.ownerOf(agentId) == msg.sender,
-            "LivenessOracle: caller is not agent owner"
+            msg.sender == owner || msg.sender == operators[agentId],
+            "LivenessOracle: unauthorized"
         );
         _lastSeen[agentId] = block.timestamp;
         emit Heartbeat(agentId, msg.sender, block.timestamp);
@@ -63,17 +103,12 @@ contract LivenessOracle {
     // Reads
     // -------------------------------------------------------------------------
 
-    /// @notice Return the Unix timestamp of the agent's most recent heartbeat.
-    ///         Returns 0 if the agent has never posted a heartbeat.
-    /// @param agentId  Numeric ERC-8004 agent identifier
+    /// @notice Unix timestamp of most recent heartbeat (0 = never)
     function lastSeen(uint256 agentId) external view returns (uint256) {
         return _lastSeen[agentId];
     }
 
-    /// @notice Return true if the agent's last heartbeat is within `thresholdSeconds`
-    ///         of the current block timestamp.
-    /// @param agentId          Numeric ERC-8004 agent identifier
-    /// @param thresholdSeconds Maximum acceptable age of the last heartbeat (seconds)
+    /// @notice True if last heartbeat is within thresholdSeconds
     function isAlive(
         uint256 agentId,
         uint256 thresholdSeconds
@@ -83,16 +118,23 @@ contract LivenessOracle {
         return (block.timestamp - ts) <= thresholdSeconds;
     }
 
-    /// @notice Convenience: return lastSeen, isAlive, and current token owner.
-    /// @param agentId          Numeric ERC-8004 agent identifier
-    /// @param thresholdSeconds Maximum acceptable age of the last heartbeat (seconds)
+    /// @notice Full status: lastSeen, alive flag, owner, operator
     function status(
         uint256 agentId,
         uint256 thresholdSeconds
-    ) external view returns (uint256 ts, bool alive, address owner) {
+    )
+        external
+        view
+        returns (
+            uint256 ts,
+            bool alive,
+            address owner,
+            address operator
+        )
+    {
         ts = _lastSeen[agentId];
         alive = ts != 0 && (block.timestamp - ts) <= thresholdSeconds;
-        // ownerOf may revert if token doesn't exist — that's fine, it bubbles up
         owner = identityRegistry.ownerOf(agentId);
+        operator = operators[agentId];
     }
 }

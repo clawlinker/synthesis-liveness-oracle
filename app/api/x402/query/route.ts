@@ -38,7 +38,7 @@ interface DetailedReport {
   lastGapSeconds: number;
   erc8004Identity: {
     tokenId: number;
-    network: "ethereum";
+    network: "base";
     name: string;
   } | null;
   queriedAt: string;
@@ -47,10 +47,10 @@ interface DetailedReport {
 
 // Generate mock data dynamically per request so timestamps stay fresh
 function getDetailedMock(agentId: number): Omit<DetailedReport, "queriedAt"> | null {
-  if (agentId !== 22945) return null;
+  if (agentId !== 28805) return null;
   const lastSeen = Math.floor(Date.now() / 1000) - 312;
   return {
-    agentId: 22945,
+    agentId: 28805,
     lastSeen,
     lastSeenIso: new Date(lastSeen * 1000).toISOString(),
     isAlive: true,
@@ -60,7 +60,7 @@ function getDetailedMock(agentId: number): Omit<DetailedReport, "queriedAt"> | n
     avgIntervalSeconds: 900,
     longestGapSeconds: 3240,
     lastGapSeconds: 312,
-    erc8004Identity: { tokenId: 22945, network: "ethereum", name: "Clawlinker" },
+    erc8004Identity: { tokenId: 28805, network: "base", name: "Clawlinker" },
     source: "mock",
   };
 }
